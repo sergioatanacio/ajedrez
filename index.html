@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajedrez Simple</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="chessBoard" width="400" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('chessBoard');
+        const ctx = canvas.getContext('2d');
+        const tileSize = 50;
+        let selectedPiece = null;
+
+        const board = [
+            ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
+            ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+            ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
+        ];
+
+        function drawBoard() {
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    ctx.fillStyle = (i + j) % 2 === 0 ? '#f0d9b5' : '#b58863';
+                    ctx.fillRect(i * tileSize, j * tileSize, tileSize, tileSize);
+                }
+            }
+        }
+
+        function drawPieces() {
+            const pieceSymbols = {
+                'k': '♔', 'q': '♕', 'r': '♖', 'b': '♗', 'n': '♘', 'p': '♙',
+                'K': '♚', 'Q': '♛', 'R': '♜', 'B': '♝', 'N': '♞', 'P': '♟'
+            };
+
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    const piece = board[j][i];
+                    if (piece !== ' ') {
+                        ctx.fillStyle = piece.toUpperCase() === piece ? 'white' : 'black';
+                        ctx.font = '40px Arial';
+                        ctx.fillText(pieceSymbols[piece], i * tileSize + 5, (j + 1) * tileSize - 5);
+                    }
+                }
+            }
+        }
+
+        function isValidMove(fromX, fromY, toX, toY) {
+            const piece = board[fromY][fromX];
+            const dx = Math.abs(toX - fromX);
+            const dy = Math.abs(toY - fromY);
+
+            switch (piece.toLowerCase()) {
+                case 'p':
+                    if (piece === 'p') {
+                        return (toY === fromY + 1 && toX === fromX && board[toY][toX] === ' ') ||
+                               (toY === fromY + 1 && Math.abs(toX - fromX) === 1 && board[toY][toX].toUpperCase() === board[toY][toX]);
+                    } else {
+                        return (toY === fromY - 1 && toX === fromX && board[toY][toX] === ' ') ||
+                               (toY === fromY - 1 && Math.abs(toX - fromX) === 1 && board[toY][toX].toLowerCase() === board[toY][toX]);
+                    }
+                case 'r':
+                    return (dx === 0 || dy === 0);
+                case 'n':
+                    return (dx === 1 && dy === 2) || (dx === 2 && dy === 1);
+                case 'b':
+                    return dx === dy;
+                case 'q':
+                    return dx === dy || dx === 0 || dy === 0;
+                case 'k':
+                    return dx <= 1 && dy <= 1;
+                default:
+                    return false;
+            }
+        }
+
+        function movePiece(fromX, fromY, toX, toY) {
+            board[toY][toX] = board[fromY][fromX];
+            board[fromY][fromX] = ' ';
+        }
+
+        canvas.addEventListener('click', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((event.clientX - rect.left) / tileSize);
+            const y = Math.floor((event.clientY - rect.top) / tileSize);
+
+            if (selectedPiece) {
+                if (isValidMove(selectedPiece.x, selectedPiece.y, x, y)) {
+                    movePiece(selectedPiece.x, selectedPiece.y, x, y);
+                    selectedPiece = null;
+                    drawGame();
+                } else {
+                    selectedPiece = null;
+                }
+            } else if (board[y][x] !== ' ') {
+                selectedPiece = { x, y };
+            }
+        });
+
+        function drawGame() {
+            drawBoard();
+            drawPieces();
+        }
+
+        drawGame();
+    </script>
+</body>
+</html>
